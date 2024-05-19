@@ -1,0 +1,11 @@
+{
+    "tableMetadata": {
+        "tableName": "table1",
+        "isActive": true,
+        "columnFamilies": {
+            "family1": []
+        },
+        "lastRowKey": 0
+    },
+    "tableRegisters": []
+}

@@ -1,0 +1,22 @@
+{
+    "tableMetadata": {
+        "tableName":"a example table",
+        "isActive": true , 
+        "columnFamilies": {
+            "family1":["columnA","columnB"] ,
+            "family2":["columnA","columnB"]
+        },
+        "lastRowKey":"1" 
+    },
+    "tableRegisters": [
+        {
+            "1":{
+                "family1":{
+                    "columnA":{
+                        "tinmestamp2130120403124":"value here"
+                    }
+                }
+            }
+        }
+    ]
+}
