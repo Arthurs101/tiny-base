@@ -1,0 +1,9 @@
+{
+    "tableMetadata": {
+        "tableName": "test2_no_attributes",
+        "isActive": true,
+        "columnFamilies": {},
+        "lastRowKey": 0
+    },
+    "tableRegisters": []
+}
