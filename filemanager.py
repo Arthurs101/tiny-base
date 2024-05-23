@@ -3,9 +3,16 @@ Module in charge of writing the datafiles
 '''
 import os
 import json
-from typing import List
+
 from appConstants import TableDescriptor
 import re
+
+def ensure_directory_exists(path):
+    '''
+    Creates the directory if it does not exist
+    '''
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def existsTable(tableName):
     '''
@@ -32,15 +39,19 @@ def newTable(tableName,families):
         f.write(JSON)
         del JSON
     return tmp
-def loadTables() -> List[TableDescriptor]:
+def loadTables() -> dict:
     '''
     Method to load the tables on the filesystem
     return list of table descriptors
     '''
-    tds = []
+    tds = {}
     for tableJson in os.listdir('./files/tables/'):
         with open(f"./files/tables/{tableJson}", 'r') as f:
             json_t = json.load(f)
-            tds.append(TableDescriptor(json_t['tableMetadata'],json_t['tableRegisters']))
+            tds[json_t['tableMetadata']['tableName']] = TableDescriptor(json_t['tableMetadata'],json_t['tableRegisters'])
     del tableJson, json_t
     return tds
+if __name__ == '__main__':
+    #always ensure directory exists
+    #before any call
+    ensure_directory_exists('./files/tables/')
