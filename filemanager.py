@@ -50,7 +50,13 @@ def loadTables() -> dict:
             tds[json_t['tableMetadata']['tableName']] = TableDescriptor(json_t['tableMetadata'],json_t['tableRegisters'])
     del tableJson, json_t
     return tds
-
+def writeTable(table):
+    'writes table descriptor into a file'
+    
+    JSON =  json.dumps(table.dicTable(),indent=4)
+    with open(f"./files/tables/{table.name}.json",'w') as f:
+        f.write(JSON)
+        del JSON
 #always ensure directory exists
 #before any call
 ensure_directory_exists('./files/tables/')  

@@ -3,6 +3,7 @@ Module for classes declarations,constants used throughout the application
 '''
 #object used to interact with a table:
 from datetime import datetime
+import calendar
 
 class TableStatusException(Exception):
     def __init__(self,message):
@@ -12,6 +13,7 @@ class ActionOnStateException(Exception):
     def __init__(self,message):
         self.message = message
         super().__init__(message)
+
 
 class TableDescriptor(object):
     '''
@@ -61,8 +63,32 @@ class TableDescriptor(object):
           }
         }
         '''
+        
         if self.is_enabled:
+            for colFamily in [_ for _ in list(data.keys()) if _ != 'rowKey']:
+                if colFamily in self.columnFamilies:
+                    for column, value in data[colFamily].items():
+                        if data['rowKey'] not in self.registers:
+                            self.registers[data['rowKey']] = {colFamily:{column:{f"timestamp{calendar.timegm(datetime.now().timetuple())}":value}}}
+                        else:
+                            self.registers[data['rowKey']][colFamily][column][f"timestamp{calendar.timegm(datetime.now().timetuple())}"]= value
+                else:
+                    raise Exception("Column family not found in table")
             pass
         else:
             raise ActionOnStateException('Table is not enabled')
         pass
+    def dicTable(self):
+        '''
+        returns a dictionary containing all the information 
+        of the table
+        useful for writing it into a json file
+        '''
+        tmp =  {
+        "tableMetadata":{
+            "tableName":self.name,
+            "isActive": self.is_enabled,
+            "columnFamilies":self.columnFamilies,
+            "verisions":self.versions,        },
+        "tableRegisters":self.registers}
+        return tmp 

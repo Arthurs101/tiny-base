@@ -43,11 +43,19 @@ def enableTable(tableName):
         tables[tableName].enable()
     except Exception as e:
         print(f"ERROR, couldn complete operation, reason: \n {e.message}")
-def addRegisters(tableName,data):
-    print("table name" + tableName)
-    print("args" + "".join(data))
-    pass
+def addRegisters(tableName,args):
+    data = {'rowKey': args[0],
+          f'{args[1].split(':')[0].replace('"','').replace("'",'')}':{
+          f'{args[1].split(':')[1].replace('"','').replace("'",'')}':args[2].replace('"','').replace("'",'')
+          }
+    }
+    if tableName  in tables:
+       tables[tableName].addRegister(data)
+    else:
+        print("Table not found")
 def scanTable(tableName):
     print(tables[tableName])
-
+def saveTables():
+    for _ ,table in tables.items():
+        writeTable(table)
 tables = loadTables()
