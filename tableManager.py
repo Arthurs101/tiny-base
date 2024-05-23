@@ -9,12 +9,19 @@ global tables
 tables = {}
 
 def createTable(args:list):
+    '''
+    returns a table descriptor object 
+    raises Exception if table already exists
+    '''
     #asumes table name as first argument
     name = args.pop(0)
+    name = name.rstrip().strip().replace('"','').replace("'",'')
     #next are the column families
     if existsTable(name): raise Exception("Table already exists")
     
     #call the write function
+    args = [arg.rstrip().strip().replace('"','').replace("'",'') for arg in args]
+
     tt =  newTable(name,args)
     return TableDescriptor(tt['tableMetadata'],tt['tableRegisters'])
 def listTables(rgx_name=None) -> List[str]:
@@ -36,6 +43,11 @@ def enableTable(tableName):
         tables[tableName].enable()
     except Exception as e:
         print(f"ERROR, couldn complete operation, reason: \n {e.message}")
+def addRegisters(tableName,data):
+    print("table name" + tableName)
+    print("args" + "".join(data))
+    pass
+def scanTable(tableName):
+    print(tables[tableName])
 
-if __name__ == '__main__':
-    tables = loadTables()
+tables = loadTables()

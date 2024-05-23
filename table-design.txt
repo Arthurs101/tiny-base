@@ -6,9 +6,12 @@
             "family1":["columnA","columnB"] ,
             "family2":["columnA","columnB"]
         },
-        "lastRowKey":"1" 
+        "versions":1, <- cantidad maxima de timestamp por celda
+        "description": {
+            "Hbase parameter":"Value"
+        }
     },
-    "tableRegisters": [
+    "tableRegisters": 
         {
             "1":{
                 "family1":{
@@ -18,5 +21,5 @@
                 }
             }
         }
-    ]
+    
 }

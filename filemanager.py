@@ -29,10 +29,9 @@ def newTable(tableName,families):
             "tableName":tableName,
             "isActive": True,
             "columnFamilies":{family:[] for family in families},
-            "lastRowKey":0,
-
+            "verisions":1
         },
-        "tableRegisters":[],
+        "tableRegisters":{},
     }
     JSON =  json.dumps(tmp,indent=4)
     with open(f"./files/tables/{tableName}.json",'w') as f:
@@ -51,7 +50,7 @@ def loadTables() -> dict:
             tds[json_t['tableMetadata']['tableName']] = TableDescriptor(json_t['tableMetadata'],json_t['tableRegisters'])
     del tableJson, json_t
     return tds
-if __name__ == '__main__':
-    #always ensure directory exists
-    #before any call
-    ensure_directory_exists('./files/tables/')
+
+#always ensure directory exists
+#before any call
+ensure_directory_exists('./files/tables/')  
