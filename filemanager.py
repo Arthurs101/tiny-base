@@ -29,7 +29,7 @@ def newTable(tableName,families):
             "tableName":tableName,
             "isActive": True,
             "columnFamilies":{family:[] for family in families},
-            "verisions":1
+            "verisions":3
         },
         "tableRegisters":{},
     }

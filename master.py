@@ -15,5 +15,7 @@ while run:
         print('exiting tiny base')
     elif c[0].lower() == 'scan':
         tableManager.scanTable(c[1])
+    elif c[0] == 'list':
+        print(tableManager.listTables())
     else:
         print('unknown')

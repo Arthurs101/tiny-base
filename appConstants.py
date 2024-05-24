@@ -68,9 +68,12 @@ class TableDescriptor(object):
             for colFamily in [_ for _ in list(data.keys()) if _ != 'rowKey']:
                 if colFamily in self.columnFamilies:
                     for column, value in data[colFamily].items():
-                        if data['rowKey'] not in self.registers:
+                        if data['rowKey'] not in self.registers: #is a new register
                             self.registers[data['rowKey']] = {colFamily:{column:{f"timestamp{calendar.timegm(datetime.now().timetuple())}":value}}}
-                        else:
+                        else: #already exists
+                            if len(list(self.registers[data['rowKey']][colFamily][column].keys())) >= self.versions:
+                                #remove the oldest version
+                                self.registers[data['rowKey']][colFamily][column].pop(list(self.registers[data['rowKey']][colFamily][column].keys())[0])
                             self.registers[data['rowKey']][colFamily][column][f"timestamp{calendar.timegm(datetime.now().timetuple())}"]= value
                 else:
                     raise Exception("Column family not found in table")
@@ -89,6 +92,6 @@ class TableDescriptor(object):
             "tableName":self.name,
             "isActive": self.is_enabled,
             "columnFamilies":self.columnFamilies,
-            "verisions":self.versions,        },
+            "versions":self.versions,        },
         "tableRegisters":self.registers}
         return tmp 
