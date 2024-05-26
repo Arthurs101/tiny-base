@@ -26,7 +26,8 @@ class TableDescriptor(object):
         self.name = metadata['tableName']
         self.columnFamilies = metadata['columnFamilies']
         self.versions = metadata['versions']
-        self.registers = registers
+        self.registers:dict = registers
+    
     def __str__(self) -> str:
         '''
         returns its information as HTable format
@@ -50,6 +51,9 @@ class TableDescriptor(object):
     def isEnabled(self):
         return self.is_enabled
     
+    def isDisabled(self):
+        return not self.is_enabled
+
     def disable(self):
         if self.is_enabled:
             self.is_enabled = False
@@ -122,3 +126,9 @@ class TableDescriptor(object):
             "versions":self.versions,        },
         "tableRegisters":self.registers}
         return tmp 
+
+    def size(self):
+        '''
+        return the amount of rows in the table
+        '''
+        return len(self.registers.keys())

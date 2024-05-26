@@ -140,8 +140,21 @@ def alterTable(tableName,args):
 def truncateTable(tableName):
     pass
 
-def count():
-    #no clue what this function should do 
-    pass
+def count(tableName):
+    '''
+    returns a int representing the number of rows in the table
+    ................................
+
+    Params
+    ----------------------------------------------------------------
+
+    tableName - the name of the table 
+    '''
+    try:
+        return tables[tableName].size()
+    except KeyError:
+        print("Table not found")
+        return None
 
 tables = loadTables()
+
