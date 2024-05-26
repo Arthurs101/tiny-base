@@ -29,7 +29,7 @@ def newTable(tableName,families):
             "tableName":tableName,
             "isActive": True,
             "columnFamilies":{family:[] for family in families},
-            "verisions":3
+            "versions":3
         },
         "tableRegisters":{},
     }
@@ -38,6 +38,7 @@ def newTable(tableName,families):
         f.write(JSON)
         del JSON
     return tmp
+
 def loadTables() -> dict:
     '''
     Method to load the tables on the filesystem
@@ -50,6 +51,7 @@ def loadTables() -> dict:
             tds[json_t['tableMetadata']['tableName']] = TableDescriptor(json_t['tableMetadata'],json_t['tableRegisters'])
     del tableJson, json_t
     return tds
+
 def writeTable(table):
     'writes table descriptor into a file'
     
@@ -57,6 +59,14 @@ def writeTable(table):
     with open(f"./files/tables/{table.name}.json",'w') as f:
         f.write(JSON)
         del JSON
+
+def deleteTable(tableName):
+    '''
+    Deletes a table from filesystem
+    '''
+    os.remove(f"./files/tables/{tableName}.json")
+
+
 #always ensure directory exists
 #before any call
 ensure_directory_exists('./files/tables/')  

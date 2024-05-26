@@ -17,5 +17,7 @@ while run:
         tableManager.scanTable(c[1])
     elif c[0] == 'list':
         print(tableManager.listTables())
+    elif c[0] == 'delete':
+        tableManager.dropTable(c[1])
     else:
         print('unknown')
