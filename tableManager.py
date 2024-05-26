@@ -145,4 +145,3 @@ def count():
     pass
 
 tables = loadTables()
-print(getRegister('employees','ME',versions=2))
