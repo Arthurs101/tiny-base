@@ -140,12 +140,6 @@ def alterTable(tableName,args):
 def truncateTable(tableName):
     pass
 
-def getRow(tableName,row):
-    try:
-        return  tables[tableName].getRegister(row)
-    except:
-        print("Table or register not found")
-
 def count():
     #no clue what this function should do 
     pass

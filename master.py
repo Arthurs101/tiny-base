@@ -1,4 +1,7 @@
 import tableManager
+'''
+This module must be the controller to comunicate GUI with tableManager
+'''
 run = True
 while run:
     c = input('Tini-Base@local: ')
