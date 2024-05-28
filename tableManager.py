@@ -29,6 +29,7 @@ def createTable(args: list):
     args = [arg.rstrip().strip().replace('"', '').replace("'", '') for arg in args]
 
     tt = newTable(name, args)
+    tables[name] = tt
     return TableDescriptor(tt['tableMetadata'], tt['tableRegisters'])
 
 def listTables(rgx_name=None) -> List[str]:
@@ -36,7 +37,7 @@ def listTables(rgx_name=None) -> List[str]:
     Method for the DDL instruction of list
     Returns a list object of strings representing the table names
     '''
-    return [table.name for table in list(tables.values())] if not rgx_name else [table.name for table in list(tables.values()) if re.search(rf"{rgx_name}", table.name)]
+    return [table for table in list(tables.keys())] if not rgx_name else [table for table in list(tables.keys()) if re.search(rf"{rgx_name}", table.name)]
 
 def disableTable(tableName):
     '''
