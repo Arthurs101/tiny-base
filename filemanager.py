@@ -49,6 +49,7 @@ def loadTables() -> dict:
         with open(f"./files/tables/{tableJson}", 'r') as f:
             json_t = json.load(f)
             tds[json_t['tableMetadata']['tableName']] = TableDescriptor(json_t['tableMetadata'],json_t['tableRegisters'])
+    # del tableJson, json_t
     return tds
 
 def writeTable(table):

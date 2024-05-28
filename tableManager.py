@@ -11,8 +11,11 @@ tables = {}
 
 class TableDescriptor:
     def __init__(self, metadata, registers):
-        self.metadata = metadata
-        self.registers = registers
+        self.is_enabled = metadata['isActive']
+        self.name = metadata['tableName']
+        self.columnFamilies = metadata['columnFamilies']
+        self.versions = metadata['versions']
+        self.registers: dict = registers
 
 def createTable(args: list):
     '''
@@ -29,33 +32,33 @@ def createTable(args: list):
     args = [arg.rstrip().strip().replace('"', '').replace("'", '') for arg in args]
 
     tt = newTable(name, args)
-    tables[name] = tt
-    return TableDescriptor(tt['tableMetadata'], tt['tableRegisters'])
+    tables[name] = TableDescriptor(tt['tableMetadata'], tt['tableRegisters'])
+    return tables[name]
 
 def listTables(rgx_name=None) -> List[str]:
     '''
     Method for the DDL instruction of list
     Returns a list object of strings representing the table names
     '''
-    return [table for table in list(tables.keys())] if not rgx_name else [table for table in list(tables.keys()) if re.search(rf"{rgx_name}", table.name)]
+    return [table.name for table in list(tables.values())] if not rgx_name else [table.name for table in list(tables.values()) if re.search(rf"{rgx_name}", table.name)]
 
 def disableTable(tableName):
     '''
     Disables the table given
     '''
     try:
-        tables[tableName].disable()
+        tables[tableName].is_enabled = False
     except Exception as e:
-        print(f"ERROR, couldn't complete operation, reason \n {e.message}")
+        print(f"ERROR, couldn't complete operation, reason \n {e}")
 
 def enableTable(tableName):
     '''
     Enables the table given
     '''
     try:
-        tables[tableName].enable()
+        tables[tableName].is_enabled = True
     except Exception as e:
-        print(f"ERROR, couldn't complete operation, reason: \n {e.message}")
+        print(f"ERROR, couldn't complete operation, reason: \n {e}")
 
 def addRegisters(tableName, args):
     data = {'rowKey': args[0],
@@ -64,7 +67,9 @@ def addRegisters(tableName, args):
             }
     }
     if tableName in tables:
-        tables[tableName].addRegister(data)
+        if 'registers' not in tables[tableName].__dict__:
+            tables[tableName].registers = []
+        tables[tableName].registers.append(data)
     else:
         print("Table not found")
 
@@ -73,7 +78,7 @@ def getRegister(tableName, rowKey, versions=1, column=None):
     Returns the register for the given table using a row key
     '''
     try:
-        tmp = tables[tableName].getRegister(rowKey)
+        tmp = tables[tableName].registers[rowKey]
         if column:
             colFamily, columnQualifier = column.split(':')
             tmp = {colFamily: {columnQualifier: tmp[colFamily][columnQualifier]}}
@@ -94,7 +99,10 @@ def getRegister(tableName, rowKey, versions=1, column=None):
         return None
 
 def scanTable(tableName):
-    print(tables[tableName])
+    if tableName in tables:
+        print(tables[tableName].registers)
+    else:
+        print("Table not found")
 
 def saveTables():
     for _, table in tables.items():
@@ -119,22 +127,22 @@ def alterTable(tableName, operation, column_name, column_type=None):
     if tableName not in tables:
         raise ValueError("Table does not exist.")
     
-    schema = tables[tableName].metadata
+    columnFamilies = tables[tableName].columnFamilies
     
     if operation == 'ADD':
-        if column_name in schema:
+        if column_name in columnFamilies:
             raise ValueError("Column already exists.")
-        schema[column_name] = column_type
+        columnFamilies[column_name] = column_type
     
     elif operation == 'DROP':
-        if column_name not in schema:
+        if column_name not in columnFamilies:
             raise ValueError("Column does not exist.")
-        del schema[column_name]
+        del columnFamilies[column_name]
     
     elif operation == 'MODIFY':
-        if column_name not in schema:
+        if column_name not in columnFamilies:
             raise ValueError("Column does not exist.")
-        schema[column_name] = column_type
+        columnFamilies[column_name] = column_type
     
     else:
         raise ValueError("Invalid operation.")
@@ -146,8 +154,8 @@ def describeTable(tableName):
     if tableName not in tables:
         raise ValueError("Table does not exist.")
     
-    schema = tables[tableName].metadata
-    return schema
+    columnFamilies = tables[tableName].columnFamilies
+    return columnFamilies
 
 def truncateTable(tableName):
     '''
@@ -163,7 +171,7 @@ def count(tableName):
     Returns the number of rows in the table
     '''
     try:
-        return tables[tableName].size()
+        return len(tables[tableName].registers)
     except KeyError:
         print("Table not found")
         return None
