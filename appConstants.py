@@ -41,11 +41,12 @@ class TableDescriptor(object):
         if self.is_enabled:
             str_self = "ROW\t\tCOLUMN+CELL\n"
             for row , columns in self.registers.items():
+                scan[row] = {}
                 for col_family , qualifiers in columns.items():
-                    scan[row] = {col_family:{}}
+                    scan[row][col_family] = {}
                     for qualifier,timestamps in qualifiers.items():
                         last = list(timestamps.keys())[-1]
-                        scan[row][col_family] = {qualifier:{last:timestamps[last]}}
+                        scan[row][col_family][qualifier] = {last:timestamps[last]}
             return scan
         else:
             raise ActionOnStateException("Table is disabled, cannot execute")

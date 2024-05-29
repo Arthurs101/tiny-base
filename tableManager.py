@@ -38,19 +38,14 @@ def disableTable(tableName):
     '''
     Disables the table given
     '''
-    try:
-         tables[tableName].disable()
-    except Exception as e:
-        print(f"ERROR, couldn't complete operation, reason \n {e}")
+    tables[tableName].disable()
 
 def enableTable(tableName):
     '''
     Enables the table given
     '''
-    try:
-        tables[tableName].enable()
-    except Exception as e:
-        print(f"ERROR, couldn't complete operation, reason: \n {e}")
+    
+    tables[tableName].enable()
 
 def addRegisters(tableName, args):
     """
@@ -142,7 +137,7 @@ def deleteFromTable(tableName,rowKey,columnName=None,timestamp=None):
     '''
     if tableName not in tables:
         raise Exception('table not found')
-    tables[tableName].deleteRegister(rowKey,columnName=None,timestamp=None)
+    tables[tableName].deleteRegister(rowKey,columnName,timestamp)
     return "succes"
 
 

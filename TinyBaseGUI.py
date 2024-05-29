@@ -147,10 +147,16 @@ class TinyBaseGUI:
                     self.tree.heading(col, text=col)
                     self.tree.column(col, width=200)
                 for row_key, columns in registers.items():
-                    for col_family, qualifiers in columns.items():
-                        for qualifier, timestamp_values in qualifiers.items():
-                            for timestamp, value in timestamp_values.items():
-                                self.tree.insert("", tk.END, values=(row_key, col_family, qualifier, timestamp, value))
+                    if not columns:
+                        self.tree.insert("", tk.END, values=(row_key, "", "", "", ""))
+                    else:
+                        for col_family, qualifiers in columns.items():
+                            for qualifier, timestamp_values in qualifiers.items():
+                                if not timestamp_values:
+                                    self.tree.insert("", tk.END, values=(row_key, col_family, qualifier, timestamp, value))
+                                else:
+                                    for timestamp, value in timestamp_values.items():
+                                        self.tree.insert("", tk.END, values=(row_key, col_family, qualifier, timestamp, value))
             except Exception as e:
                 messagebox.showerror("Error", str(e))
     
@@ -207,8 +213,13 @@ class TinyBaseGUI:
     def prompt_dialog(self, prompt):
         dialog = CustomDialog(self.root, title="Input", prompt=prompt)
         return dialog.result
-
+def on_closing():
+    messagebox.showinfo("Closing", "saving changes...")
+    tableManager.saveTables()
+    messagebox.showinfo("Succes","saved changes")
+    root.destroy()
 if __name__ == "__main__":
     root = tk.Tk()
     gui = TinyBaseGUI(root)
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
