@@ -109,16 +109,16 @@ def scanTable(tableName):
 def saveTables():
     for _, table in tables.items():
         writeTable(table)
-
 def dropTable(tableName):
     try:
         if tables[tableName].isDisabled():
             del tables[tableName]
             deleteTable(tableName)
         else:
-            Exception("Table not disabled")
+            raise Exception("Table not disabled")
     except KeyError:
         raise KeyError("Table not found")
+
 
 def dropTables():
     for _ in list(tables.keys()):
