@@ -79,12 +79,15 @@ class TinyBaseGUI:
         self.tree_frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
         
         self.tree = ttk.Treeview(self.tree_frame, columns=("Row Key", "Column Family", "Column Qualifier", "Timestamp", "Value"), show='headings', style='Treeview')
+        y_scrollbar = ttk.Scrollbar(root, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.heading("Row Key", text="Row Key")
         self.tree.heading("Column Family", text="Column Family")
         self.tree.heading("Column Qualifier", text="Column Qualifier")
         self.tree.heading("Timestamp", text="Timestamp")
         self.tree.heading("Value", text="Value")
-        self.tree.pack(fill=tk.BOTH, expand=True)
+        self.tree.pack(side=tk.LEFT,fill=tk.BOTH, expand=True)
+        y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree.configure(yscrollcommand=y_scrollbar.set)
         
     def create_table(self):
         table_name = self.prompt_dialog("Enter table name:")
