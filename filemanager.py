@@ -6,7 +6,7 @@ import json
 
 from appConstants import TableDescriptor
 import re
-
+import send2trash 
 def ensure_directory_exists(path):
     '''
     Creates the directory if it does not exist
@@ -64,7 +64,7 @@ def deleteTable(tableName):
     '''
     Deletes a table from filesystem
     '''
-    os.remove(f"./files/tables/{tableName}.json")
+    send2trash.send2trash(f"./files/tables/{tableName}.json")
 
 
 #always ensure directory exists

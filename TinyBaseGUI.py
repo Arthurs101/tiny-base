@@ -97,7 +97,7 @@ class TinyBaseGUI:
             try:
                 registers = tableManager.scanTable(table_name)
                 self.tree.delete(*self.tree.get_children())
-                self.tree["columns"] = ("Row Key", "Column Family", "Column Qualifier", "Value")
+                self.tree["columns"] = ("Row Key", "Column Family", "Column Qualifier", "timestamp", "Value")
                 for col in self.tree["columns"]:
                     self.tree.heading(col, text=col)
                     self.tree.column(col, width=200)
@@ -105,7 +105,7 @@ class TinyBaseGUI:
                     for col_family, qualifiers in columns.items():
                         for qualifier, timestamp_values in qualifiers.items():
                             for timestamp, value in timestamp_values.items():
-                                self.tree.insert("", tk.END, values=(row_key, col_family, qualifier, value))
+                                self.tree.insert("", tk.END, values=(row_key, col_family, qualifier, timestamp ,value))
             except Exception as e:
                 messagebox.showerror("Error", str(e))
     

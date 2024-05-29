@@ -9,14 +9,6 @@ import re
 global tables
 tables = {}
 
-class TableDescriptor:
-    def __init__(self, metadata, registers):
-        self.is_enabled = metadata['isActive']
-        self.name = metadata['tableName']
-        self.columnFamilies = metadata['columnFamilies']
-        self.versions = metadata['versions']
-        self.registers: dict = registers
-
 def createTable(args: list):
     '''
     returns a table descriptor object 
@@ -47,7 +39,7 @@ def disableTable(tableName):
     Disables the table given
     '''
     try:
-        tables[tableName].is_enabled = False
+         tables[tableName].disable()
     except Exception as e:
         print(f"ERROR, couldn't complete operation, reason \n {e}")
 
@@ -56,29 +48,38 @@ def enableTable(tableName):
     Enables the table given
     '''
     try:
-        tables[tableName].is_enabled = True
+        tables[tableName].enable()
     except Exception as e:
         print(f"ERROR, couldn't complete operation, reason: \n {e}")
 
 def addRegisters(tableName, args):
+    """
+    This function adds a register to the table given
+
+    Args:
+        tableName (str): Name of the table to add the register to.
+        args (list): List containing arguments for register creation:
+            - args[0]: Row key for the register.
+            - args[1]: Column name in format "columnFamily:columnQualifier".
+            - args[2]: Value to be added to the specified column.
+    """
+    column_family, column_qualifier = args[1].replace("\"", "").replace("'", "").split(':')
     data = {'rowKey': args[0],
-            f'{args[1].split(":")[0].replace('"', '').replace("'", "")}': {
-            f'{args[1].split(":")[1].replace('"', '').replace("'", "")}': args[2].replace('"', '').replace("'", "")
+            column_family: {
+            column_qualifier: args[2].replace('"', '').replace("'", "")
             }
-    }
+        }
     if tableName in tables:
-        if 'registers' not in tables[tableName].__dict__:
-            tables[tableName].registers = []
-        tables[tableName].registers.append(data)
+        tables[tableName].addRegister(data)
     else:
-        print("Table not found")
+        raise Exception("table not found")
 
 def getRegister(tableName, rowKey, versions=1, column=None):
     '''
     Returns the register for the given table using a row key
     '''
     try:
-        tmp = tables[tableName].registers[rowKey]
+        tmp = tables[tableName].getRegister(rowKey)
         if column:
             colFamily, columnQualifier = column.split(':')
             tmp = {colFamily: {columnQualifier: tmp[colFamily][columnQualifier]}}
@@ -100,9 +101,10 @@ def getRegister(tableName, rowKey, versions=1, column=None):
 
 def scanTable(tableName):
     if tableName in tables:
-        print(tables[tableName].registers)
+        return tables[tableName].scanSelf()
     else:
-        print("Table not found")
+        raise ValueError("Table does not exist.")
+        return None
 
 def saveTables():
     for _, table in tables.items():
@@ -110,15 +112,39 @@ def saveTables():
 
 def dropTable(tableName):
     try:
-        del tables[tableName]
-        deleteTable(tableName)
+        if tables[tableName].isDisabled():
+            del tables[tableName]
+            deleteTable(tableName)
+        else:
+            Exception("Table not disabled")
     except KeyError:
-        print("Table not found")
+        raise KeyError("Table not found")
 
 def dropTables():
     for _ in list(tables.keys()):
-        del tables[_]
-        deleteTable(_)
+        if tables[_].isDisabled():
+            del tables[_]
+            deleteTable(_)
+
+def deleteFromTable(tableName,rowKey,columnName=None,timestamp=None):
+    '''
+    Delete cell from table indicating row key and column name
+    tableName: str
+        name of the table
+    rowKey: str
+        the row key to delete
+    columnName: str
+        has to be on the following format columnFamily:columnQualifier
+        carefull, it may be optional, but not specified will delete the entire row
+        if the columnQualifier is not specified will delete all the info on the column family
+    timestamp: int
+        specifies the timestamp to delete
+    '''
+    if tableName not in tables:
+        raise Exception('table not found')
+    tables[tableName].deleteRegister(rowKey,columnName=None,timestamp=None)
+    return "succes"
+
 
 def alterTable(tableName, operation, column_name, column_type=None):
     '''
@@ -138,7 +164,8 @@ def alterTable(tableName, operation, column_name, column_type=None):
         if column_name not in columnFamilies:
             raise ValueError("Column does not exist.")
         del columnFamilies[column_name]
-    
+        for register, _ in tables[tableName].registers.items():
+            del tables[tableName].registers[register][column_name]
     elif operation == 'MODIFY':
         if column_name not in columnFamilies:
             raise ValueError("Column does not exist.")

@@ -28,7 +28,7 @@ class TableDescriptor(object):
         self.versions = metadata['versions']
         self.registers:dict = registers
     
-    def __str__(self) -> str:
+    def scanSelf(self):
         '''
         returns its information as HTable format
         ROW         Column+cell
@@ -37,14 +37,16 @@ class TableDescriptor(object):
 
         Raises ActionOnStateException if is disabled
         '''
+        scan = {}
         if self.is_enabled:
             str_self = "ROW\t\tCOLUMN+CELL\n"
-            for row , data in self.registers.items():
-                for col_family , column in data.items():
-                    for cell,timestamps in column.items():
+            for row , columns in self.registers.items():
+                for col_family , qualifiers in columns.items():
+                    scan[row] = {col_family:{}}
+                    for qualifier,timestamps in qualifiers.items():
                         last = list(timestamps.keys())[-1]
-                        str_self += f"{row}\t\tcolumn={col_family}:{cell}, {last.replace("timestamp","timestamp=")} , value={timestamps[last]}\n"
-            return str_self
+                        scan[row][col_family] = {qualifier:{last:timestamps[last]}}
+            return scan
         else:
             raise ActionOnStateException("Table is disabled, cannot execute")
 
@@ -112,6 +114,20 @@ class TableDescriptor(object):
         '''
         return self.registers[rowKey]
 
+    def deleteRegister(self, rowKey,columnName=None,timestamp=None):
+        if rowKey not in self.registers:
+            raise Exception('record not found')
+        if columnName:
+            columnName = columnName.split(':')
+            if timestamp and len(columnName) == 2: #the specific cell
+                del self.registers[rowKey][columnName[0]][columnName[1]][f"timestamp{timestamp}"]
+            elif len(columnName) == 2: #all the info on the column qualifier
+                del self.registers[rowKey][columnName[0]][columnName[1]]
+            else: #all the info on the column family
+                del self.registers[rowKey][columnName[0]]
+        else: #all the data of the row key
+            del self.registers[rowKey]
+    
     def dicTable(self):
         '''
         returns a dictionary containing all the information 
