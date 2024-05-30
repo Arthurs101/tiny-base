@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from tkinter import ttk
@@ -35,48 +36,36 @@ class TinyBaseGUI:
         style.configure('Treeview.Heading', font=('Helvetica', 12, 'bold'), foreground='#333', background='#87ceeb')
         style.map('TButton', background=[('active', '#0052cc')], foreground=[('active', 'white')])
         
-        # Create a frame for buttons
         self.button_frame = ttk.Frame(root, padding="10 10 10 10", style='TFrame')
         self.button_frame.pack(pady=20, padx=20, fill=tk.X)
 
-        # Create the label
-        self.label = ttk.Label(root, text="Tiny Base Database Management", font=('Helvetica', 20, 'bold'), style='TLabel')
-        self.label.pack(pady=20, fill=tk.X)
-        
-        # Create buttons and place them in the button frame
-        self.create_btn = ttk.Button(self.button_frame, text="Create Table", command=self.create_table, style='TButton')
-        self.create_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.add_register_btn = ttk.Button(self.button_frame, text="Add Register", command=self.add_register, style='TButton')
-        self.add_register_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.list_tables_btn = ttk.Button(self.button_frame, text="List Tables", command=self.list_tables, style='TButton')
-        self.list_tables_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.enable_table_btn = ttk.Button(self.button_frame, text="Enable Table", command=self.enable_table, style='TButton')
-        self.enable_table_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.disable_table_btn = ttk.Button(self.button_frame, text="Disable Table", command=self.disable_table, style='TButton')
-        self.disable_table_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.scan_table_btn = ttk.Button(self.button_frame, text="Scan Table", command=self.scan_table, style='TButton')
-        self.scan_table_btn.pack(side=tk.LEFT, padx=5)
+        # List of buttons
+        buttons = [
+            ("Create Table", self.create_table),
+            ("Enable Table", self.enable_table),
+            ("Disable Table", self.disable_table),
+            ("List Tables", self.list_tables),
+            ("Scan Table", self.scan_table),
+            ("Alter Table", self.alter_table),
+            ("Delete Table", self.delete_table),
+            ("Truncate Table", self.truncate_table),
+            ("Describe Table", self.describe_table),
+            ("Add Register", self.add_register),
+            ("Get Register", self.get_register),
+            ("Delete Register", self.delete_register)
+        ]
 
-        self.get_register_btn = ttk.Button(self.button_frame, text="Get Register", command=self.get_register, style='TButton')
-        self.get_register_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.alter_table_btn = ttk.Button(self.button_frame, text="Alter Table", command=self.alter_table, style='TButton')
-        self.alter_table_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.delete_table_btn = ttk.Button(self.button_frame, text="Delete Table", command=self.delete_table, style='TButton')
-        self.delete_table_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.describe_table_btn = ttk.Button(self.button_frame, text="Describe Table", command=self.describe_table, style='TButton')
-        self.describe_table_btn.pack(side=tk.LEFT, padx=5)
-        
-        self.delete_register_btn = ttk.Button(self.button_frame, text="Delete Register", command=self.delete_register, style='TButton')
-        self.delete_register_btn.pack(side=tk.LEFT, padx=5)
-        
+        # Place buttons in grid
+        for index, (text, command) in enumerate(buttons):
+            row = index // 6
+            column = index % 6
+            btn = ttk.Button(self.button_frame, text=text, command=command, style='TButton')
+            btn.grid(row=row, column=column, padx=5, pady=5, sticky=tk.W+tk.E)
+
+        # Expand buttons to fill the frame
+        for col in range(6):
+            self.button_frame.columnconfigure(col, weight=1)
+
         # Create the treeview for displaying table data
         self.tree_frame = ttk.Frame(root, padding="10 10 10 10", style='TFrame')
         self.tree_frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
@@ -169,9 +158,13 @@ class TinyBaseGUI:
     def get_register(self):
         table_name = self.prompt_dialog("Enter table name:")
         row_key = self.prompt_dialog("Enter row key:")
+        column_family = self.prompt_dialog("Enter column family: (colmunFamily:columnQualifier)")
+        versions = None
+        if column_family:
+            versions = self.prompt_dialog("Amount of versions to retrieve:")
         if table_name and row_key:
             try:
-                register = tableManager.getRegister(table_name, row_key)
+                register = tableManager.getRegister(table_name, row_key, column=column_family if column_family else None, versions=int(versions) if versions else 1)
                 self.tree.delete(*self.tree.get_children())
                 self.tree["columns"] = ("Column Family", "Column Qualifier", "Timestamp", "Value")
                 for col in self.tree["columns"]:
@@ -186,7 +179,7 @@ class TinyBaseGUI:
     
     def alter_table(self):
         table_name = self.prompt_dialog("Enter table name:")
-        action = self.prompt_dialog("Enter action (modify or delete column family):")
+        action = self.prompt_dialog("Enter action (ADD, DROP, MODIFY Column family):")
         column_family = self.prompt_dialog("Enter column family name:")
         if table_name and action and column_family:
             try:
@@ -199,7 +192,7 @@ class TinyBaseGUI:
         table_name = self.prompt_dialog("Enter table name:")
         if table_name:
             try:
-                tableManager.deleteTable(table_name)
+                tableManager.dropTable(table_name)
                 messagebox.showinfo("Success", f"Table '{table_name}' deleted successfully!")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
@@ -222,18 +215,38 @@ class TinyBaseGUI:
     def delete_register(self):
         table_name = self.prompt_dialog("Enter table name:")
         row_key = self.prompt_dialog("Enter row key:")
+        column_name = self.prompt_dialog("Enter column name (optional):")
+        timestamp = self.prompt_dialog("Enter timestamp (optional):")
         if table_name and row_key:
             try:
-                tableManager.deleteRegister(table_name, row_key)
-                messagebox.showinfo("Success", f"Register with row key '{row_key}' deleted from table '{table_name}' successfully!")
+                tableManager.deleteFromTable(table_name, row_key, column_name if column_name else None, int(timestamp) if timestamp else None)
+                messagebox.showinfo("Success", f"Register deleted from table '{table_name}' successfully!")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
     
     def prompt_dialog(self, prompt):
         dialog = CustomDialog(self.root, "Input", prompt)
         return dialog.result
+    def truncate_table(self):
+        table_name = self.prompt_dialog("Enter table name:")
+        if table_name:
+            start = time.time()
+            tableManager.truncateTable(table_name)
+            end = time.time()
+            messagebox.showinfo("Truncating table", f"Disabling table {table_name}....")
+            messagebox.showinfo("Truncating table", f"Dropping table {table_name}....")
+            messagebox.showinfo("Truncating table", f"Recreating table {table_name}....")
+            messagebox.showinfo("Truncating table", f"Finished truncating {table_name}\n time to finish:{end-start} S")
+
+def on_closing():
+    messagebox.showinfo("Closing", "saving changes...")
+    tableManager.saveTables()
+    messagebox.showinfo("Succes","saved changes")
+    root.destroy()       
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = TinyBaseGUI(root)
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
+    
