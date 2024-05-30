@@ -1,1 +1,5 @@
 /files/tables/
+__pycache___/
+/__pycache___/*
+/*.csv
+/temp.py

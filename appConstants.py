@@ -93,6 +93,9 @@ class TableDescriptor(object):
                     for column, value in data[colFamily].items():
                         if data['rowKey'] not in self.registers: #is a new register
                             self.registers[data['rowKey']] = {colFamily:{column:{f"timestamp{calendar.timegm(datetime.now().timetuple())}":value}}}
+                        elif colFamily not in  self.registers[data['rowKey']]:
+                            #new data of another column family
+                            self.registers[data['rowKey']][colFamily] = {column: {f"timestamp{calendar.timegm(datetime.now().timetuple())}":value}}
                         elif column not in self.registers[data['rowKey']][colFamily]:
                             #new column qualifier
                             self.registers[data['rowKey']][colFamily][column] = {f"timestamp{calendar.timegm(datetime.now().timetuple())}":value}
