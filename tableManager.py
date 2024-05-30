@@ -185,7 +185,6 @@ def truncateTable(tableName):
     '''
     if tableName in tables:
         tables[tableName].registers.clear()
-        tables[tableName].columnFamilies.clear()
     else:
         raise Exception("Table does not exist")
 
