@@ -61,6 +61,9 @@ class TinyBaseGUI:
         
         self.scan_table_btn = ttk.Button(self.button_frame, text="Scan Table", command=self.scan_table, style='TButton')
         self.scan_table_btn.pack(side=tk.LEFT, padx=5)
+
+        self.get_register_btn = ttk.Button(self.button_frame, text="Get Register", command=self.get_register, style='TButton')
+        self.get_register_btn.pack(side=tk.LEFT, padx=5)
         
         self.alter_table_btn = ttk.Button(self.button_frame, text="Alter Table", command=self.alter_table, style='TButton')
         self.alter_table_btn.pack(side=tk.LEFT, padx=5)
@@ -85,7 +88,7 @@ class TinyBaseGUI:
         self.tree.heading("Column Qualifier", text="Column Qualifier")
         self.tree.heading("Timestamp", text="Timestamp")
         self.tree.heading("Value", text="Value")
-        self.tree.pack(side=tk.LEFT,fill=tk.BOTH, expand=True)
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.tree.configure(yscrollcommand=y_scrollbar.set)
         
@@ -156,21 +159,38 @@ class TinyBaseGUI:
                         for col_family, qualifiers in columns.items():
                             for qualifier, timestamp_values in qualifiers.items():
                                 if not timestamp_values:
-                                    self.tree.insert("", tk.END, values=(row_key, col_family, qualifier, timestamp, value))
+                                    self.tree.insert("", tk.END, values=(row_key, col_family, qualifier, "", ""))
                                 else:
                                     for timestamp, value in timestamp_values.items():
                                         self.tree.insert("", tk.END, values=(row_key, col_family, qualifier, timestamp, value))
             except Exception as e:
                 messagebox.showerror("Error", str(e))
+
+    def get_register(self):
+        table_name = self.prompt_dialog("Enter table name:")
+        row_key = self.prompt_dialog("Enter row key:")
+        if table_name and row_key:
+            try:
+                register = tableManager.getRegister(table_name, row_key)
+                self.tree.delete(*self.tree.get_children())
+                self.tree["columns"] = ("Column Family", "Column Qualifier", "Timestamp", "Value")
+                for col in self.tree["columns"]:
+                    self.tree.heading(col, text=col)
+                    self.tree.column(col, width=200)
+                for col_family, qualifiers in register.items():
+                    for qualifier, timestamp_values in qualifiers.items():
+                        for timestamp, value in timestamp_values.items():
+                            self.tree.insert("", tk.END, values=(col_family, qualifier, timestamp, value))
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
     
     def alter_table(self):
         table_name = self.prompt_dialog("Enter table name:")
-        operation = self.prompt_dialog("Enter operation (ADD/DROP/MODIFY):")
-        column_name = self.prompt_dialog("Enter column name:")
-        column_type = self.prompt_dialog("Enter column type (if applicable):")
-        if table_name and operation and column_name:
+        action = self.prompt_dialog("Enter action (modify or delete column family):")
+        column_family = self.prompt_dialog("Enter column family name:")
+        if table_name and action and column_family:
             try:
-                tableManager.alterTable(table_name, operation, column_name, column_type)
+                tableManager.alterTable(table_name, [action, column_family])
                 messagebox.showinfo("Success", f"Table '{table_name}' altered successfully!")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
@@ -179,9 +199,8 @@ class TinyBaseGUI:
         table_name = self.prompt_dialog("Enter table name:")
         if table_name:
             try:
-                tableManager.dropTable(table_name)
+                tableManager.deleteTable(table_name)
                 messagebox.showinfo("Success", f"Table '{table_name}' deleted successfully!")
-                self.list_tables()  # Refresh the table list
             except Exception as e:
                 messagebox.showerror("Error", str(e))
     
@@ -189,40 +208,32 @@ class TinyBaseGUI:
         table_name = self.prompt_dialog("Enter table name:")
         if table_name:
             try:
-                schema = tableManager.describeTable(table_name)
+                description = tableManager.describeTable(table_name)
                 self.tree.delete(*self.tree.get_children())
-                self.tree["columns"] = ("Column Family", "Column Type")
+                self.tree["columns"] = ("Column Family", "Attributes")
                 for col in self.tree["columns"]:
                     self.tree.heading(col, text=col)
                     self.tree.column(col, width=200)
-                for cf, ct in schema.items():
-                    self.tree.insert("", tk.END, values=(cf, ct))
+                for col_family, attributes in description.items():
+                    self.tree.insert("", tk.END, values=(col_family, attributes))
             except Exception as e:
                 messagebox.showerror("Error", str(e))
-
+    
     def delete_register(self):
         table_name = self.prompt_dialog("Enter table name:")
         row_key = self.prompt_dialog("Enter row key:")
-        column_name = self.prompt_dialog("Enter column name (optional):")
-        timestamp = self.prompt_dialog("Enter timestamp (optional):")
-        
         if table_name and row_key:
             try:
-                tableManager.deleteFromTable(table_name, row_key, column_name if column_name else None, int(timestamp) if timestamp else None)
-                messagebox.showinfo("Success", f"Register deleted from table '{table_name}' successfully!")
+                tableManager.deleteRegister(table_name, row_key)
+                messagebox.showinfo("Success", f"Register with row key '{row_key}' deleted from table '{table_name}' successfully!")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
     
     def prompt_dialog(self, prompt):
-        dialog = CustomDialog(self.root, title="Input", prompt=prompt)
+        dialog = CustomDialog(self.root, "Input", prompt)
         return dialog.result
-def on_closing():
-    messagebox.showinfo("Closing", "saving changes...")
-    tableManager.saveTables()
-    messagebox.showinfo("Succes","saved changes")
-    root.destroy()
+
 if __name__ == "__main__":
     root = tk.Tk()
-    gui = TinyBaseGUI(root)
-    root.protocol("WM_DELETE_WINDOW", on_closing)
+    app = TinyBaseGUI(root)
     root.mainloop()
